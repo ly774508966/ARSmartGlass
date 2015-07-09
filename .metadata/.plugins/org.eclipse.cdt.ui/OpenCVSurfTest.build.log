@@ -1,0 +1,16 @@
+22:04:36 **** Build of configuration Debug for project OpenCVSurfTest ****
+make all 
+Building file: ../src/main.cpp
+Invoking: NVCC Compiler
+/usr/local/cuda-6.5/bin/nvcc -I/usr/arm-linux-gnueabihf/include -G -g -O0 -ccbin arm-linux-gnueabihf-g++ -gencode arch=compute_32,code=sm_32 --target-cpu-architecture ARM -m32 -odir "src" -M -o "src/main.d" "../src/main.cpp"
+/usr/local/cuda-6.5/bin/nvcc -I/usr/arm-linux-gnueabihf/include -G -g -O0 --compile --target-cpu-architecture ARM -m32 -ccbin arm-linux-gnueabihf-g++  -x c++ -o  "src/main.o" "../src/main.cpp"
+Finished building: ../src/main.cpp
+ 
+Building target: OpenCVSurfTest
+Invoking: NVCC Linker
+/usr/local/cuda-6.5/bin/nvcc --cudart shared -L/usr/arm-linux-gnueabihf/lib/opencv -Xlinker --unresolved-symbols=ignore-in-shared-libs --relocatable-device-code=false -gencode arch=compute_32,code=compute_32 -gencode arch=compute_32,code=sm_32 --target-cpu-architecture ARM -m32 -ccbin arm-linux-gnueabihf-g++ -link -o  "OpenCVSurfTest"  ./src/main.o   -lopencv_imgproc -lopencv_gpu -lopencv_core  -lopencv_highgui -lopencv_nonfree -lopencv_features2d
+Finished building target: OpenCVSurfTest
+ 
+
+22:04:37 Build Finished (took 705ms)
+

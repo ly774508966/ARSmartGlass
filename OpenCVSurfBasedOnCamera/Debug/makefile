@@ -47,7 +47,7 @@ all: OpenCVSurfBasedOnCamera
 OpenCVSurfBasedOnCamera: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: NVCC Linker'
-	/usr/local/cuda-6.5/bin/nvcc --cudart shared -L/usr/arm-linux-gnueabihf/lib/opencv -Xlinker -unresolved-symbols=ignore-in-shared-libs --relocatable-device-code=false -gencode arch=compute_32,code=compute_32 -gencode arch=compute_32,code=sm_32 --target-cpu-architecture ARM -m32 -ccbin arm-linux-gnueabihf-g++ -link -o  "OpenCVSurfBasedOnCamera" $(OBJS) $(USER_OBJS) $(LIBS)
+	/usr/local/cuda-6.5/bin/nvcc --cudart static --relocatable-device-code=false -gencode arch=compute_32,code=compute_32 -gencode arch=compute_32,code=sm_32 --target-cpu-architecture ARM -m32 -ccbin arm-linux-gnueabihf-g++ -link -o  "OpenCVSurfBasedOnCamera" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

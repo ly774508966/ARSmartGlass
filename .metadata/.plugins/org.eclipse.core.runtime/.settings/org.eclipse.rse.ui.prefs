@@ -1,2 +1,2 @@
 eclipse.preferences.version=1
-org.eclipse.rse.preferences.order.connections=ubuntu.Local
+org.eclipse.rse.preferences.order.connections=ubuntu.Local;ubuntu.ubuntu@10.0.1.15
