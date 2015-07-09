@@ -2,3 +2,5 @@
 RemoteSystemsTempFiles/
 Debug/
 Release/
+.cproject
+.project
