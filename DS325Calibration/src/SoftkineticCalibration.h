@@ -7,6 +7,7 @@
 
 #define MAX_DISTANCE_MM       32001
 #define TRANSFORM_BASED_ON_MATRIX 1
+#define DS325_MATRIX_FILE     "ds325.yml"
 
 using namespace std;
 using namespace cv;
@@ -26,8 +27,6 @@ private:
 private:
 	Mat R;               //rotation matrix
 	Mat T;               //translation matrix
-
-	Mat R_inv;           ///inverse matrix of R
 
 	Mat K_depth;         //intrinsic parameters of depth camera
 	Mat K_rgb;           //intrinsic parameters of color camera

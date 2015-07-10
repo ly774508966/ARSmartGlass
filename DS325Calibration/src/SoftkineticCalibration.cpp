@@ -2,55 +2,34 @@
 
 softkineticCalibration::softkineticCalibration()
 {
-	//All based on Softkinetic 325 sensor
 	R = Mat::zeros(3, 3, CV_64F);
-	R.at<double>(0, 0) = 0.999999;
-	R.at<double>(0, 1) = -0.00125877;
-	R.at<double>(0, 2) = -0.000802669;
-	R.at<double>(1, 0) = -0.00126216;
-	R.at<double>(1, 1) = -0.99999;
-	R.at<double>(1, 2) = -0.00423948;
-	R.at<double>(2, 0) = 0.000797325;
-	R.at<double>(2, 1) = -0.00424049;
-	R.at<double>(2, 2) = 0.999991;
-
-	invert(R, R_inv);
-
 	T = Mat::zeros(3, 1, CV_64F);
-	T.at<double>(0, 0) = 0.026;
-	T.at<double>(1, 0) = -0.000507992;
-	T.at<double>(2, 0) = -0.000862588;
-
 	K_depth = Mat::zeros(3, 3, CV_64F);
-	K_depth.at<double>(0, 0) = 224.502;
-	K_depth.at<double>(0, 2) = 160;
-	K_depth.at<double>(1, 1) = -230.494;
-	K_depth.at<double>(1, 2) = 120;
-	K_depth.at<double>(2, 2) = 1;
+	K_rgb   = Mat::zeros(3, 3, CV_64F);
+	Dist_depth = Mat::zeros(5, 1, CV_64F);
+	Dist_rgb   = Mat::zeros(5, 1, CV_64F);
 
-	K_rgb = Mat::zeros(3, 3, CV_64F);
-	K_rgb.at<double>(0, 0) = 587.452/2;
-	K_rgb.at<double>(0, 2) = 320/2;
-	K_rgb.at<double>(1, 1) = 600.675/2;
-	K_rgb.at<double>(1, 2) = 240/2;
-	K_rgb.at<double>(2, 2) = 1;
+	//All based on Softkinetic 325 sensor
+	string filename = DS325_MATRIX_FILE;
+	FileStorage fs;
+	fs.open(filename, FileStorage::READ);
+
+	if (!fs.isOpened())
+	{
+		cerr << "Failed to open DS325 matrix file" << filename << endl;
+	}
+
+	fs["R"] >> R;
+	fs["T"] >> T;
+	fs["Intrinsics of Depth camera"] >> K_depth;
+	fs["Intrinsics of Color camera"] >> K_rgb;
+	fs["Distortion of Depth camera"] >> Dist_depth;
+	fs["Distortion of Color camera"] >> Dist_rgb;
+
+	fs.release();
 
 	invert(K_depth, K_depth_inv);
 	invert(K_rgb, K_rgb_inv);
-
-	Dist_depth = Mat::zeros(5, 1, CV_64F);
-	Dist_depth.at<double>(0, 0) = -0.170103;
-	Dist_depth.at<double>(1, 0) = 0.144064;
-	Dist_depth.at<double>(2, 0) = 0.0;
-	Dist_depth.at<double>(3, 0) = 0.0;
-	Dist_depth.at<double>(4, 0) = -0.0476994;
-
-	Dist_rgb = Mat::zeros(5, 1, CV_64F);
-	Dist_rgb.at<double>(0, 0) = 0.0225752;
-	Dist_rgb.at<double>(1, 0) = -0.162668;
-	Dist_rgb.at<double>(2, 0) = 0.0;
-	Dist_rgb.at<double>(3, 0) = 0.0;
-	Dist_rgb.at<double>(4, 0) = 0.186138;
 
 	P_depth.create(3, 1, CV_64F);
 	P_rgb.create(3, 1, CV_64F);

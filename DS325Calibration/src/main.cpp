@@ -68,7 +68,7 @@ int main()
 
   rc = openni::OpenNI::initialize();
 
-  cout << "After initialization:" << openni::OpenNI::getExtendedError();
+  //cout << "After initialization:" << openni::OpenNI::getExtendedError();
 
   rc = device.open(deviceURI);
   if (rc != openni::STATUS_OK)
