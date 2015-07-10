@@ -128,27 +128,44 @@ int main()
 
   cv::Mat color_img, depth_img, depth_img_show;
   cv::Mat color_to_depth;
+
+  time_t start, end;
+  char fps[50];
+  int counter = 0;
+
   while(true)
   {
+	if (counter == 0){
+	    time(&start);
+	}
 
     if(color_stream.readFrame(&color_frame) == openni::STATUS_OK)
     if(color_frame.isValid())
     {
       color_img = getColorImage(color_frame);
-      cv::imshow("color", color_img);
     }
 
     if(depth_stream.readFrame(&depth_frame) == openni::STATUS_OK)
     if(depth_frame.isValid())
     {
       depth_img = getDepthImage(depth_frame);
-
       depth_img_show = getDepthDrawableImage(depth_img);
-      cv::imshow("depth", depth_img_show);
     }
 
     color_to_depth = DS325Cali.mapColorToDepth(depth_img, color_img);
     cv::imshow("color to depth", color_to_depth);
+
+    // fps
+    time(&end);
+    counter++;
+    sprintf(fps, "Fps: %.2f", (double)counter/difftime(end, start));
+    if (counter == (INT_MAX - 1000))
+        counter = 0;
+
+    putText(color_img, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
+
+    cv::imshow("depth", depth_img_show);
+    cv::imshow("color", color_img);
 
     int key = cv::waitKey(1);
     if( key == 'q' || key == 27)
