@@ -73,25 +73,17 @@ void onNewColorSample(ColorNode node, ColorNode::NewSampleReceivedData data)
 	FrameFormat_toResolution(data.captureConfiguration.frameFormat,&w,&h);
     //cout<<w<<"  "<<h<<"  color"<<endl;
 
-	for(int i=0; i<h; i++)
-	{
-		Vec3b *bgrData = g_videoImage.ptr<Vec3b>(i);
-		for(int j=0; j<w; j++)
-		{
-		        bgrData[j][0] = data.colorMap[w * i * 3 + j *3];
-				bgrData[j][1] = data.colorMap[w * i * 3 + j *3 + 1];
-				bgrData[j][2] = data.colorMap[w * i * 3 + j *3 + 2];
-		}
-	}
+	g_videoImage = Mat( h, w, CV_8UC3, (void*)(const uint8_t*)data.colorMap );
 
     // fps
     time(&end);
     counter++;
+    //cout<<"FPS: "<<(double)counter/difftime(end, start)<<endl;
     sprintf(fps, "Fps: %.2f", (double)counter/difftime(end, start));
     if (counter == (INT_MAX - 1000))
             counter = 0;
 
-    //putText(g_videoImage, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
+    putText(g_videoImage, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
 
 	imshow("color", g_videoImage);
 	waitKey(1);
@@ -120,13 +112,15 @@ void onNewDepthSample(DepthNode node, DepthNode::NewSampleReceivedData data)
     FrameFormat_toResolution(data.captureConfiguration.frameFormat,&w,&h);
     //cout<<w<<"  "<<h<<"  depth"<<endl;
 
+    g_depthImage = Mat( h, w, CV_16SC1 , (void*)(const int16_t*)data.depthMap );
+    imshow("depth", getDepthDrawableImage(g_depthImage));
+
     int count=0;
     g_MappedColorImgae.setTo(0);
     if(data.depthMap!=0 && data.uvMap!=0)
     {
     	for(int i=0; i<h; i++)
     	{
-    		int16_t *depthData = g_depthImage.ptr<int16_t>(i);
     		Vec3b *colordata   = g_MappedColorImgae.ptr<Vec3b>(i);
     		for(int j=0; j<w; j++)
     		{
@@ -140,17 +134,12 @@ void onNewDepthSample(DepthNode node, DepthNode::NewSampleReceivedData data)
     			    colordata[j][1] = tempColor[1];
     			    colordata[j][2] = tempColor[2];
     			}
-
-    			depthData[j] = (int16_t)(data.depthMap[count]);
-
     			count++;
     		}
     	}
     }
 
-    imshow("depth", getDepthDrawableImage(g_depthImage));
     imshow("mapped image", g_MappedColorImgae);
-    waitKey(1);
 
     g_dFrames++;
 
