@@ -153,7 +153,6 @@ int main()
     }
 
     color_to_depth = DS325Cali.mapColorToDepth(depth_img, color_img);
-    cv::imshow("color to depth", color_to_depth);
 
     // fps
     time(&end);
@@ -164,6 +163,7 @@ int main()
 
     putText(color_img, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
 
+    cv::imshow("color to depth", color_to_depth);
     cv::imshow("depth", depth_img_show);
     cv::imshow("color", color_img);
 

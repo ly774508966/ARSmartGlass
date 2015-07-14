@@ -1,3 +1,28 @@
+/*********************************************************
+/Align the depth and color images for softKinect using OpenCV
+/
+/                 [x_rgb]           [X_camera_rgb]
+/  Z_camera_rgb * |y_rgb| = k_rgb * |Y_camera_rgb|            -- (1)
+/                 [  1  ]           [Z_camera_rgb]
+/
+/                   [x_depth]             [X_camera_depth]
+/  Z_camera_depth * |y_depth| = k_depth * |Y_camera_depth|    -- (2)
+/                   [   1   ]             [Z_camera_depth]
+/
+/  [X_camera_rgb]       [X_camera_depth]
+/  |Y_camera_rgb| = R * |Y_camera_depth|  + T                 -- (3)
+/  [Z_camera_rgb]       [Z_camera_depth]
+/
+/  From above (1), (2), (3), we can get:
+/
+/                 [x_rgb]                                              [x_depth]
+/  Z_camera_rgb * |y_rgb| = k_rgb * R * K_depth_inv * Z_camera_depth * |y_depth| + k_rgb * T
+/                 [  1  ]                                              [   1   ]
+/
+/  then make M1 = k_rgb * R * k_depth_inv
+/            M2 = k_rgb * T
+/*********************************************************/
+
 #ifndef _SOFTKINETIC_CALIBRATION_H_
 #define _SOFTKINETIC_CALIBRATION_H_
 
@@ -38,6 +63,9 @@ private:
 
 	Mat P_depth;         //3D Position of a pixel in the depth camera coordinate system
 	Mat P_rgb;           //3D Position of a pixel in the color camera coordinate system
+
+	Mat M1;              //k_rgb*R*k_depth_inv
+	Mat M2;              //k_rgb*T
 };
 
 #endif
