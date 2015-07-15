@@ -78,15 +78,15 @@ void onNewColorSample(ColorNode node, ColorNode::NewSampleReceivedData data)
     // fps
     time(&end);
     counter++;
-    //cout<<"FPS: "<<(double)counter/difftime(end, start)<<endl;
-    sprintf(fps, "Fps: %.2f", (double)counter/difftime(end, start));
+    cout<<"FPS: "<<(double)counter/difftime(end, start)<<endl;
+    //sprintf(fps, "Fps: %.2f", (double)counter/difftime(end, start));
     if (counter == (INT_MAX - 1000))
             counter = 0;
 
-    putText(g_videoImage, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
+    //putText(g_videoImage, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
 
-	imshow("color", g_videoImage);
-	waitKey(1);
+	//imshow("color", g_videoImage);
+	//waitKey(1);
 
     //printf("C#%u: %d\n",g_cFrames,data.colorMap.size());
     g_cFrames++;
@@ -113,7 +113,7 @@ void onNewDepthSample(DepthNode node, DepthNode::NewSampleReceivedData data)
     //cout<<w<<"  "<<h<<"  depth"<<endl;
 
     g_depthImage = Mat( h, w, CV_16SC1 , (void*)(const int16_t*)data.depthMap );
-    //imshow("depth", getDepthDrawableImage(g_depthImage));
+    imshow("depth", getDepthDrawableImage(g_depthImage));
 
     int count=0;
     g_MappedColorImgae.setTo(0);
@@ -139,7 +139,7 @@ void onNewDepthSample(DepthNode node, DepthNode::NewSampleReceivedData data)
     	}
     }
 
-    //imshow("mapped image", g_MappedColorImgae);
+    imshow("mapped image", g_MappedColorImgae);
 
     g_dFrames++;
 
