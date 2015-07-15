@@ -56,13 +56,13 @@ private:
 	Mat K_depth;         //intrinsic parameters of depth camera
 	Mat K_rgb;           //intrinsic parameters of color camera
 	Mat Dist_depth;      //distortion coefficients of depth camera
-	Mat Dist_rgb;        //distortion coefficients of color camera
+	//Mat Dist_rgb;        //distortion coefficients of color camera
 
 	Mat K_depth_inv;     //inverse matrix of depth camera
-	Mat K_rgb_inv;       //inverse matrix of color camera
+	//Mat K_rgb_inv;       //inverse matrix of color camera
 
-	Mat P_depth;         //3D Position of a pixel in the depth camera coordinate system
-	Mat P_rgb;           //3D Position of a pixel in the color camera coordinate system
+	//Mat P_depth;         //3D Position of a pixel in the depth camera coordinate system
+	//Mat P_rgb;           //3D Position of a pixel in the color camera coordinate system
 
 	Mat M1;              //k_rgb*R*k_depth_inv
 	Mat M2;              //k_rgb*T

@@ -7,7 +7,7 @@ softkineticCalibration::softkineticCalibration()
 	K_depth = Mat::zeros(3, 3, CV_64F);
 	K_rgb   = Mat::zeros(3, 3, CV_64F);
 	Dist_depth = Mat::zeros(5, 1, CV_64F);
-	Dist_rgb   = Mat::zeros(5, 1, CV_64F);
+	//Dist_rgb   = Mat::zeros(5, 1, CV_64F);
 
 	//All based on Softkinetic 325 sensor
 	string filename = DS325_MATRIX_FILE;
@@ -24,15 +24,15 @@ softkineticCalibration::softkineticCalibration()
 	fs["Intrinsics of Depth camera"] >> K_depth;
 	fs["Intrinsics of Color camera"] >> K_rgb;
 	fs["Distortion of Depth camera"] >> Dist_depth;
-	fs["Distortion of Color camera"] >> Dist_rgb;
+	//fs["Distortion of Color camera"] >> Dist_rgb;
 
 	fs.release();
 
 	invert(K_depth, K_depth_inv);
-	invert(K_rgb, K_rgb_inv);
+	//invert(K_rgb, K_rgb_inv);
 
-	P_depth.create(3, 1, CV_64F);
-	P_rgb.create(3, 1, CV_64F);
+	//P_depth.create(3, 1, CV_64F);
+	//P_rgb.create(3, 1, CV_64F);
 
 	M1 = Mat::zeros(3, 3, CV_64F);
 	M2 = Mat::zeros(3, 1, CV_64F);
@@ -58,6 +58,7 @@ Mat softkineticCalibration::mapColorToDepth(const Mat& srcDepthImage, const Mat&
 	undistort(srcDepthImage, src, K_depth, Dist_depth);
 
 	dstImage.setTo(0);
+
 	for(int row=0; row<src.rows; row++)
 	{
 		ushort* depthSrc     = src.ptr<ushort>(row);

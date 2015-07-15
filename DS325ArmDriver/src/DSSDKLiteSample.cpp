@@ -113,7 +113,7 @@ void onNewDepthSample(DepthNode node, DepthNode::NewSampleReceivedData data)
     //cout<<w<<"  "<<h<<"  depth"<<endl;
 
     g_depthImage = Mat( h, w, CV_16SC1 , (void*)(const int16_t*)data.depthMap );
-    imshow("depth", getDepthDrawableImage(g_depthImage));
+    //imshow("depth", getDepthDrawableImage(g_depthImage));
 
     int count=0;
     g_MappedColorImgae.setTo(0);
@@ -139,7 +139,7 @@ void onNewDepthSample(DepthNode node, DepthNode::NewSampleReceivedData data)
     	}
     }
 
-    imshow("mapped image", g_MappedColorImgae);
+    //imshow("mapped image", g_MappedColorImgae);
 
     g_dFrames++;
 

@@ -149,7 +149,7 @@ int main()
     if(depth_frame.isValid())
     {
       depth_img = getDepthImage(depth_frame);
-      depth_img_show = getDepthDrawableImage(depth_img);
+      //depth_img_show = getDepthDrawableImage(depth_img);
     }
 
     color_to_depth = DS325Cali.mapColorToDepth(depth_img, color_img);
@@ -163,9 +163,18 @@ int main()
 
     putText(color_img, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
 
-    cv::imshow("color to depth", color_to_depth);
-    cv::imshow("depth", depth_img_show);
+    //cv::imshow("color to depth", color_to_depth);
+    //cv::imshow("depth", depth_img_show);
     cv::imshow("color", color_img);
+
+    /*
+    if(!color_to_depth.empty() && !depth_img_show.empty())
+    {
+       cv::cvtColor(depth_img_show, depth_img_show, cv::COLOR_GRAY2BGR);
+       cv::Mat debug_img = color_to_depth * 0.5 + depth_img_show * 0.5;
+       cv::imshow("blend", debug_img);
+    }
+    */
 
     int key = cv::waitKey(1);
     if( key == 'q' || key == 27)
