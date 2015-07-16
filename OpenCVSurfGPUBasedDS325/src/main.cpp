@@ -169,14 +169,14 @@ int main()
 
     color_to_depth = DS325Cali.mapColorToDepth(depth_img, color_img);
     color_to_depth_gpu.upload(color_to_depth);
-    gpu::cvtColor(color_to_depth_gpu, gray_img_gpu, CV_BGR2GRAY);
+    gpu::cvtColor(color_img_gpu, gray_img_gpu, CV_BGR2GRAY);
 
     //GPU SURF
     if(color_img.data)
     {
     	FeatureFinder_gpu(gray_img_gpu, cv::gpu::GpuMat(), keypoints_gpu, descriptors_gpu, false);
     	FeatureFinder_gpu.downloadKeypoints(keypoints_gpu, keypoints);
-    	drawKeypoints(color_to_depth, keypoints, color_to_depth, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
+    	drawKeypoints(color_img, keypoints, color_img, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
     }
 
     // fps
@@ -186,11 +186,11 @@ int main()
     if (counter == (INT_MAX - 1000))
         counter = 0;
 
-    putText(color_to_depth, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
+    putText(color_img, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
 
-    cv::imshow("color to depth", color_to_depth);
+    //cv::imshow("color to depth", color_to_depth);
     //cv::imshow("depth", depth_img_show);
-    //cv::imshow("color", color_img);
+    cv::imshow("color", color_img);
 
     int key = cv::waitKey(1);
     if( key == 'q' || key == 27)
