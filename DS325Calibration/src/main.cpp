@@ -8,6 +8,7 @@
 #include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/nonfree/gpu.hpp>
 #include <opencv2/gpu/gpu.hpp>
+#include <SDL2/SDL.h>
 
 #include "SoftkineticCalibration.h"
 
@@ -58,8 +59,32 @@ cv::Mat getDepthDrawableImage(cv::Mat depth_image)
 
 int main()
 {
+  //SDL2
+  SDL_Event event;
+  if (SDL_Init(SDL_INIT_EVERYTHING) == 1 )
+  {
+	 cout << "error: " << SDL_GetError() << endl;
+	 return 1;
+  }
+
+  SDL_Window* window = SDL_CreateWindow("hello", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 240, SDL_WINDOW_SHOWN);
+  if (window == NULL)
+  {
+	 cout << "Error: " << SDL_GetError() << endl;
+	 return 1;
+  }
+
+  SDL_Renderer* renderer = SDL_CreateRenderer(window, 1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  if (renderer == NULL)
+  {
+	 cout << "Error: " << SDL_GetError() << endl;
+	 return 1;
+  }
+
+  //color to depth map
   softkineticCalibration DS325Cali;
 
+  //openni
   openni::Device device;
   openni::VideoStream color_stream, depth_stream;
   const char* deviceURI = openni::ANY_DEVICE;
@@ -149,7 +174,7 @@ int main()
     if(depth_frame.isValid())
     {
       depth_img = getDepthImage(depth_frame);
-      depth_img_show = getDepthDrawableImage(depth_img);
+      //depth_img_show = getDepthDrawableImage(depth_img);
     }
 
     color_to_depth = DS325Cali.mapColorToDepth(depth_img, color_img);
@@ -161,11 +186,22 @@ int main()
     if (counter == (INT_MAX - 1000))
         counter = 0;
 
-    putText(color_img, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
+    putText(color_to_depth, fps , cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(0,0,250), 1);
 
-    cv::imshow("color to depth", color_to_depth);
-    cv::imshow("depth", depth_img_show);
-    cv::imshow("color", color_img);
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)color_to_depth.data,
+    		color_to_depth.size().width, color_to_depth.size().height,
+            8 * color_to_depth.channels(),
+            color_to_depth.step, 0xff0000, 0x00ff00, 0x0000ff, 0);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_FreeSurface(surface);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, 0, 0);
+    SDL_RenderPresent(renderer);
+
+    //cv::imshow("color to depth", color_to_depth);
+    //cv::imshow("depth", depth_img_show);
+    //cv::imshow("color", color_img);
 
     /*
     if(!color_to_depth.empty() && !depth_img_show.empty())
@@ -176,11 +212,37 @@ int main()
     }
     */
 
-    int key = cv::waitKey(1);
-    if( key == 'q' || key == 27)
+    int key = 0;
+    while(SDL_PollEvent(&event))
     {
-      break;
+    	switch (event.type)
+    	{
+    		case SDL_QUIT:
+    		{
+    			key = 1;
+    			break;
+    		}
+
+    		case SDL_KEYDOWN:
+            {
+                    switch (event.key.keysym.sym)
+                    {
+                       case SDLK_ESCAPE:
+                          key = 1;
+                          break;
+                    }
+                    break;
+            }
+    	}
     }
+
+    if(key == 1)
+    	break;
   }
+
+  SDL_DestroyWindow(window);
+  SDL_DestroyRenderer(renderer);
+  SDL_Quit();
+
   return 0;
 }
