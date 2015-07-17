@@ -29,6 +29,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <DepthSense.hxx>
 
 #define MAX_DISTANCE_MM       32001
 #define TRANSFORM_BASED_ON_MATRIX 1
@@ -36,15 +37,17 @@
 
 using namespace std;
 using namespace cv;
+using namespace DepthSense;
 
 class softkineticCalibration
 {
 public:
-	softkineticCalibration();
+	softkineticCalibration();                        //Read DS325 parameters by using DepthSense Driver
+	softkineticCalibration(const string filename);   //Read DS325 parameters from a .yml file
 	~softkineticCalibration();
 
-	Mat mapDepthToColor(const Mat& srcDepthImage);
-	Mat mapColorToDepth(const Mat& srcDepthImage, const Mat& srcColorImage);
+	Mat mapDepthToColor(const Mat& srcDepthImage);                            //map the depth image to the color image
+	Mat mapColorToDepth(const Mat& srcDepthImage, const Mat& srcColorImage);  //map the color image to the depth image
 
 private:
 	Mat smoothMappedDepthImage(Mat& srcMappedDepthImage);
@@ -56,13 +59,13 @@ private:
 	Mat K_depth;         //intrinsic parameters of depth camera
 	Mat K_rgb;           //intrinsic parameters of color camera
 	Mat Dist_depth;      //distortion coefficients of depth camera
-	//Mat Dist_rgb;        //distortion coefficients of color camera
+	//Mat Dist_rgb;      //distortion coefficients of color camera
 
 	Mat K_depth_inv;     //inverse matrix of depth camera
-	//Mat K_rgb_inv;       //inverse matrix of color camera
+	//Mat K_rgb_inv;     //inverse matrix of color camera
 
-	//Mat P_depth;         //3D Position of a pixel in the depth camera coordinate system
-	//Mat P_rgb;           //3D Position of a pixel in the color camera coordinate system
+	//Mat P_depth;       //3D Position of a pixel in the depth camera coordinate system
+	//Mat P_rgb;         //3D Position of a pixel in the color camera coordinate system
 
 	Mat M1;              //k_rgb*R*k_depth_inv
 	Mat M2;              //k_rgb*T

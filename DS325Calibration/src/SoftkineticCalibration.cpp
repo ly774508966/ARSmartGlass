@@ -2,6 +2,80 @@
 
 softkineticCalibration::softkineticCalibration()
 {
+	//Read all parameters based on SoftKenitc DepthSense SDK
+	Context context = Context::createStandalone();
+	vector<Device> devices = context.getDevices();
+	StereoCameraParameters stereo;
+
+	if (devices.size() != 0)
+	{
+	 	for(int i = 0; i < devices.size(); i++)
+	 	{
+	 		stereo=devices[i].getStereoCameraParameters();
+
+	 	}
+	}
+
+	ExtrinsicParameters extParams = stereo.extrinsics;
+	IntrinsicParameters intDepthParams = stereo.depthIntrinsics;
+	IntrinsicParameters intColorParams = stereo.colorIntrinsics;
+
+	//Set R
+	R = Mat::zeros(3, 3, CV_64F);
+	R.at<double>(0, 0) = extParams.r11; R.at<double>(0, 1) = extParams.r12; R.at<double>(0, 2) = extParams.r13;
+	R.at<double>(1, 0) = extParams.r21; R.at<double>(1, 1) = extParams.r22; R.at<double>(1, 2) = extParams.r23;
+	R.at<double>(2, 0) = extParams.r31; R.at<double>(2, 1) = extParams.r32; R.at<double>(2, 2) = extParams.r33;
+
+	//Set T
+	T = Mat::zeros(3, 1, CV_64F);
+	T.at<double>(0, 0) = extParams.t1; T.at<double>(1, 0) = extParams.t2; T.at<double>(2, 0) = extParams.t3;
+
+	//Set K_depth
+	K_depth = Mat::zeros(3, 3, CV_64F);
+	K_depth.at<double>(0, 0) =  intDepthParams.fx; K_depth.at<double>(0, 2) = intDepthParams.cx;
+	K_depth.at<double>(1, 1) = -intDepthParams.fy; K_depth.at<double>(1, 2) = intDepthParams.cy;
+	K_depth.at<double>(2, 2) = 1;
+
+	//Set K_rgb
+	K_rgb = Mat::zeros(3, 3, CV_64F);
+	K_rgb.at<double>(0, 0) = intColorParams.fx/2; K_rgb.at<double>(0, 2) = intColorParams.cx/2;
+	K_rgb.at<double>(1, 1) = intColorParams.fy/2; K_rgb.at<double>(1, 2) = intColorParams.cy/2;
+	K_rgb.at<double>(2, 2) = 1;
+
+	//Set Dist_depth
+	Dist_depth = Mat::zeros(5, 1, CV_64F);
+	Dist_depth.at<double>(0, 0) = intDepthParams.k1;
+	Dist_depth.at<double>(1, 0) = intDepthParams.k2;
+	Dist_depth.at<double>(2, 0) = intDepthParams.p1;
+	Dist_depth.at<double>(3, 0) = intDepthParams.p2;
+	Dist_depth.at<double>(4, 0) = intDepthParams.k3;
+
+	//Set Dist_rgb
+	//Dist_rgb = Mat::zeros(5, 1, CV_64F);
+	//Dist_rgb.at<double>(0, 0) = intColorParams.k1;
+	//Dist_rgb.at<double>(1, 0) = intColorParams.k2;
+	//Dist_rgb.at<double>(2, 0) = intColorParams.p1;
+	//Dist_rgb.at<double>(3, 0) = intColorParams.p2;
+	//Dist_rgb.at<double>(4, 0) = intColorParams.k3;
+
+	invert(K_depth, K_depth_inv);
+	//invert(K_rgb, K_rgb_inv);
+
+	//P_depth.create(3, 1, CV_64F);
+	//P_rgb.create(3, 1, CV_64F);
+
+	M1 = Mat::zeros(3, 3, CV_64F);
+	M2 = Mat::zeros(3, 1, CV_64F);
+	Mat temp(3, 3, CV_64F);
+	//M1 = k_rgb*R*k_depth_inv
+	gemm(K_rgb, R, 1, NULL, NULL, temp, 0);
+	gemm(temp, K_depth_inv, 1, NULL, NULL, M1, 0);
+	//M2 = k_rgb*t
+	gemm(K_rgb, T, 1, NULL, NULL, M2, 0);
+}
+
+softkineticCalibration::softkineticCalibration(const string filename)
+{
 	R = Mat::zeros(3, 3, CV_64F);
 	T = Mat::zeros(3, 1, CV_64F);
 	K_depth = Mat::zeros(3, 3, CV_64F);
@@ -10,7 +84,7 @@ softkineticCalibration::softkineticCalibration()
 	//Dist_rgb   = Mat::zeros(5, 1, CV_64F);
 
 	//All based on Softkinetic 325 sensor
-	string filename = DS325_MATRIX_FILE;
+	//filename = DS325_MATRIX_FILE;
 	FileStorage fs;
 	fs.open(filename, FileStorage::READ);
 
@@ -56,6 +130,7 @@ Mat softkineticCalibration::mapColorToDepth(const Mat& srcDepthImage, const Mat&
 
 	Mat src;
 	undistort(srcDepthImage, src, K_depth, Dist_depth);
+	//srcDepthImage.copyTo(src);
 
 	dstImage.setTo(0);
 
@@ -152,7 +227,7 @@ Mat softkineticCalibration::mapDepthToColor(const Mat& srcDepthImage)
 		}
 	}
 
-	return dstImage.clone();
+	return smoothMappedDepthImage(dstImage);
 }
 
 Mat softkineticCalibration::smoothMappedDepthImage(Mat& srcMappedDepthImage)
