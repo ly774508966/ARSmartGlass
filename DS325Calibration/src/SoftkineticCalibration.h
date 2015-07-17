@@ -33,7 +33,6 @@
 
 #define MAX_DISTANCE_MM       32001
 #define TRANSFORM_BASED_ON_MATRIX 1
-#define DS325_MATRIX_FILE     "ds325.yml"
 
 using namespace std;
 using namespace cv;

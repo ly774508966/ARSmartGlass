@@ -84,7 +84,6 @@ softkineticCalibration::softkineticCalibration(const string filename)
 	//Dist_rgb   = Mat::zeros(5, 1, CV_64F);
 
 	//All based on Softkinetic 325 sensor
-	//filename = DS325_MATRIX_FILE;
 	FileStorage fs;
 	fs.open(filename, FileStorage::READ);
 
@@ -125,8 +124,8 @@ softkineticCalibration::~softkineticCalibration()
 Mat softkineticCalibration::mapColorToDepth(const Mat& srcDepthImage, const Mat& srcColorImage)
 {
 	Mat dstImage(srcDepthImage.rows, srcDepthImage.cols, CV_8UC3);
-	Mat p_depth(3, 1, CV_64F);         //pixel coordinate in depth image
-	Mat p_rgb(3, 1, CV_64F);           //pixel coordinate in color image
+	Mat p_depth(3, 1, CV_64F);
+	Mat p_rgb(3, 1, CV_64F);
 
 	Mat src;
 	undistort(srcDepthImage, src, K_depth, Dist_depth);
@@ -170,8 +169,8 @@ Mat softkineticCalibration::mapDepthToColor(const Mat& srcDepthImage)
 {
 
 	Mat dstImage(srcDepthImage.rows, srcDepthImage.cols, CV_16U);
-	Mat p_depth(3, 1, CV_64F);         //pixel coordinate in depth image
-	Mat p_rgb(3, 1, CV_64F);           //pixel coordinate in color image
+	Mat p_depth(3, 1, CV_64F);
+	Mat p_rgb(3, 1, CV_64F);
 
 	Mat src;
 	undistort(srcDepthImage, src, K_depth, Dist_depth);
