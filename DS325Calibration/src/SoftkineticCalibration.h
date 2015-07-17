@@ -30,13 +30,14 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 #include <DepthSense.hxx>
+#include <Eigen/Eigen>
 
-#define MAX_DISTANCE_MM       32001
-#define TRANSFORM_BASED_ON_MATRIX 1
+#define MAX_DISTANCE_MM       32002
 
 using namespace std;
 using namespace cv;
 using namespace DepthSense;
+using namespace Eigen;
 
 class softkineticCalibration
 {
@@ -68,6 +69,7 @@ private:
 
 	Mat M1;              //k_rgb*R*k_depth_inv
 	Mat M2;              //k_rgb*T
+    double M2_array[3];
 };
 
 #endif

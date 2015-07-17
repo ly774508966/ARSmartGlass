@@ -72,6 +72,10 @@ softkineticCalibration::softkineticCalibration()
 	gemm(temp, K_depth_inv, 1, NULL, NULL, M1, 0);
 	//M2 = k_rgb*t
 	gemm(K_rgb, T, 1, NULL, NULL, M2, 0);
+
+	M2_array[0] = M2.at<double>(0,0);
+	M2_array[1] = M2.at<double>(1,0);
+	M2_array[2] = M2.at<double>(2,0);
 }
 
 softkineticCalibration::softkineticCalibration(const string filename)
@@ -115,6 +119,10 @@ softkineticCalibration::softkineticCalibration(const string filename)
 	gemm(temp, K_depth_inv, 1, NULL, NULL, M1, 0);
 	//M2 = k_rgb*t
 	gemm(K_rgb, T, 1, NULL, NULL, M2, 0);
+
+	M2_array[0] = M2.at<double>(0,0);
+	M2_array[1] = M2.at<double>(1,0);
+	M2_array[2] = M2.at<double>(2,0);
 }
 
 softkineticCalibration::~softkineticCalibration()
@@ -124,8 +132,9 @@ softkineticCalibration::~softkineticCalibration()
 Mat softkineticCalibration::mapColorToDepth(const Mat& srcDepthImage, const Mat& srcColorImage)
 {
 	Mat dstImage(srcDepthImage.rows, srcDepthImage.cols, CV_8UC3);
-	Mat p_depth(3, 1, CV_64F);
-	Mat p_rgb(3, 1, CV_64F);
+	Mat p_depth(3, srcDepthImage.rows*srcDepthImage.cols, CV_64F);
+	Mat p_rgb(3, srcDepthImage.rows*srcDepthImage.cols, CV_64F);
+	double p_rgb_pixel[3];
 
 	Mat src;
 	undistort(srcDepthImage, src, K_depth, Dist_depth);
@@ -133,24 +142,46 @@ Mat softkineticCalibration::mapColorToDepth(const Mat& srcDepthImage, const Mat&
 
 	dstImage.setTo(0);
 
+	double* p_depth_row0     = p_depth.ptr<double>(0);
+	double* p_depth_row1     = p_depth.ptr<double>(1);
+	double* p_depth_row2     = p_depth.ptr<double>(2);
+	int p_depth_col = 0;
 	for(int row=0; row<src.rows; row++)
 	{
 		ushort* depthSrc     = src.ptr<ushort>(row);
-		Vec3b*  dstImageData = dstImage.ptr<Vec3b>(row);
 		for(int col=0; col<src.cols; col++)
 		{
 
 			double depth = (double)(depthSrc[col]/1000.0);
-			if(depth > 1.0) continue;
+			//if(depth > 1.0) depth = 0;
 
-			p_depth.at<double>(0,0) = col * depth;
-			p_depth.at<double>(1,0) = row * depth;
-			p_depth.at<double>(2,0) = depth;
+			p_depth_row0[p_depth_col] = col * depth;
+			p_depth_row1[p_depth_col] = row * depth;
+			p_depth_row2[p_depth_col] = depth;
 
-			gemm(M1, p_depth, 1, M2, 1, p_rgb, 0);
+			p_depth_col++;
+		}
+	}
 
-			ushort row_rgb = cvRound(p_rgb.at<double>(1,0)/p_rgb.at<double>(2,0));
-			ushort col_rgb = cvRound(p_rgb.at<double>(0,0)/p_rgb.at<double>(2,0));
+	gemm(M1, p_depth, 1, NULL, NULL, p_rgb, 0);
+
+	double* p_rgb_row0     = p_rgb.ptr<double>(0);
+	double* p_rgb_row1     = p_rgb.ptr<double>(1);
+	double* p_rgb_row2     = p_rgb.ptr<double>(2);
+	int p_rgb_col = 0;
+	for(int row=0; row<src.rows; row++)
+	{
+		Vec3b*  dstImageData = dstImage.ptr<Vec3b>(row);
+		for(int col=0; col<src.cols; col++)
+		{
+
+			p_rgb_pixel[0] = p_rgb_row0[p_rgb_col] + M2_array[0];
+			p_rgb_pixel[1] = p_rgb_row1[p_rgb_col] + M2_array[1];
+			p_rgb_pixel[2] = p_rgb_row2[p_rgb_col] + M2_array[2];
+			p_rgb_col++;
+
+			ushort row_rgb = cvRound(p_rgb_pixel[1]/p_rgb_pixel[2]);
+			ushort col_rgb = cvRound(p_rgb_pixel[0]/p_rgb_pixel[2]);
 
 			if(row_rgb>=0 && row_rgb<dstImage.rows && col_rgb>=0 && col_rgb<dstImage.cols)
 			{
@@ -159,6 +190,7 @@ Mat softkineticCalibration::mapColorToDepth(const Mat& srcDepthImage, const Mat&
 				dstImageData[col][1] = tempColor[1];
 				dstImageData[col][2] = tempColor[2];
 			}
+
 		}
 	}
 
@@ -167,66 +199,68 @@ Mat softkineticCalibration::mapColorToDepth(const Mat& srcDepthImage, const Mat&
 
 Mat softkineticCalibration::mapDepthToColor(const Mat& srcDepthImage)
 {
-
 	Mat dstImage(srcDepthImage.rows, srcDepthImage.cols, CV_16U);
-	Mat p_depth(3, 1, CV_64F);
-	Mat p_rgb(3, 1, CV_64F);
+	Mat p_depth(3, srcDepthImage.rows*srcDepthImage.cols, CV_64F);
+	Mat p_rgb(3, srcDepthImage.rows*srcDepthImage.cols, CV_64F);
+	double p_rgb_pixel[3];
 
 	Mat src;
 	undistort(srcDepthImage, src, K_depth, Dist_depth);
+	//srcDepthImage.copyTo(src);
 
-	dstImage.setTo(MAX_DISTANCE_MM);
+	dstImage.setTo(0);
+
+	double* p_depth_row0     = p_depth.ptr<double>(0);
+	double* p_depth_row1     = p_depth.ptr<double>(1);
+	double* p_depth_row2     = p_depth.ptr<double>(2);
+	int p_depth_col = 0;
 	for(int row=0; row<src.rows; row++)
 	{
-		ushort* depthSrc = src.ptr<ushort>(row);
+		ushort* depthSrc     = src.ptr<ushort>(row);
 		for(int col=0; col<src.cols; col++)
 		{
+
 			double depth = (double)(depthSrc[col]/1000.0);
-			if(depth > 1.0) continue;
+			//if(depth > 1.0) depth = 0;
 
-#ifdef TRANSFORM_BASED_ON_MATRIX
+			p_depth_row0[p_depth_col] = col * depth;
+			p_depth_row1[p_depth_col] = row * depth;
+			p_depth_row2[p_depth_col] = depth;
 
-			p_depth.at<double>(0,0) = col * depth;
-			p_depth.at<double>(1,0) = row * depth;
-			p_depth.at<double>(2,0) = depth;
+			p_depth_col++;
+		}
+	}
 
-			gemm(M1, p_depth, 1, M2, 1, p_rgb, 0);
+	gemm(M1, p_depth, 1, NULL, NULL, p_rgb, 0);
 
-			ushort row_rgb = cvRound(p_rgb.at<double>(1,0)/p_rgb.at<double>(2,0));
-			ushort col_rgb = cvRound(p_rgb.at<double>(0,0)/p_rgb.at<double>(2,0));
-			ushort depthDst = cvRound(p_rgb.at<double>(2,0)*1000);
+	double* p_rgb_row0     = p_rgb.ptr<double>(0);
+	double* p_rgb_row1     = p_rgb.ptr<double>(1);
+	double* p_rgb_row2     = p_rgb.ptr<double>(2);
+	int p_rgb_col = 0;
+	for(int row=0; row<src.rows; row++)
+	{
+		Vec3b*  dstImageData = dstImage.ptr<Vec3b>(row);
+		for(int col=0; col<src.cols; col++)
+		{
+
+			p_rgb_pixel[0] = p_rgb_row0[p_rgb_col] + M2.at<double>(0,0);
+			p_rgb_pixel[1] = p_rgb_row1[p_rgb_col] + M2.at<double>(1,0);
+			p_rgb_pixel[2] = p_rgb_row2[p_rgb_col] + M2.at<double>(2,0);
+			p_rgb_col++;
+
+			ushort row_rgb = cvRound(p_rgb_pixel[1]/p_rgb_pixel[2]);
+			ushort col_rgb = cvRound(p_rgb_pixel[0]/p_rgb_pixel[2]);
+			ushort depthDst = cvRound(p_rgb_pixel[2]*1000);
 
 			if(row_rgb>=0 && row_rgb<dstImage.rows && col_rgb>=0 && col_rgb<dstImage.cols)
 			{
 				dstImage.at<ushort>(row_rgb, col_rgb) = depthDst;
 			}
 
-#else
-			P_depth.at<double>(0,0) = (col - K_depth.at<double>(0, 2)) * (double)(depthSrc[col]/1000.0) / K_depth.at<double>(0, 0);
-			P_depth.at<double>(1,0) = (row - K_depth.at<double>(1, 2)) * (double)(depthSrc[col]/1000.0) / K_depth.at<double>(1, 1);
-			P_depth.at<double>(2,0) = (double)(depthSrc[col]/1000.0);
-
-			temp.at<double>(0,0)  = R.at<double>(0,0)*P_depth.at<double>(0,0) + R.at<double>(0,1)*P_depth.at<double>(1,0) + R.at<double>(0,2)*P_depth.at<double>(2,0);
-			temp.at<double>(1,0)  = R.at<double>(1,0)*P_depth.at<double>(0,0) + R.at<double>(1,1)*P_depth.at<double>(1,0) + R.at<double>(1,2)*P_depth.at<double>(2,0);
-			temp.at<double>(2,0)  = R.at<double>(2,0)*P_depth.at<double>(0,0) + R.at<double>(2,1)*P_depth.at<double>(1,0) + R.at<double>(2,2)*P_depth.at<double>(2,0);
-			P_rgb.at<double>(0,0) = temp.at<double>(0,0) + T.at<double>(0,0);
-			P_rgb.at<double>(1,0) = temp.at<double>(1,0) + T.at<double>(1,0);
-			P_rgb.at<double>(2,0) = temp.at<double>(2,0) + T.at<double>(2,0);
-
-			p_rgb.at<double>(0,0) = (P_rgb.at<double>(0,0) * K_rgb.at<double>(0, 0) / P_rgb.at<double>(2,0)) + K_rgb.at<double>(0, 2);
-			p_rgb.at<double>(1,0) = (P_rgb.at<double>(1,0) * K_rgb.at<double>(1, 1) / P_rgb.at<double>(2,0)) + K_rgb.at<double>(1, 2);
-
-			ushort row_rgb = cvRound(p_rgb.at<double>(1,0));
-			ushort col_rgb = cvRound(p_rgb.at<double>(0,0));
-			if(row_rgb>=0 && row_rgb<dstImage.rows && col_rgb>=0 && col_rgb<dstImage.cols)
-			{
-				dstImage.at<ushort>(row_rgb, col_rgb) = cvRound(P_rgb.at<double>(2,0)*1000);
-			}
-#endif
 		}
 	}
 
-	return smoothMappedDepthImage(dstImage);
+	return dstImage.clone();
 }
 
 Mat softkineticCalibration::smoothMappedDepthImage(Mat& srcMappedDepthImage)

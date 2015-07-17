@@ -59,6 +59,7 @@ cv::Mat getDepthDrawableImage(cv::Mat depth_image)
 
 int main()
 {
+
   //SDL2
   SDL_Event event;
   if (SDL_Init(SDL_INIT_EVERYTHING) == 1 )
@@ -67,15 +68,17 @@ int main()
 	 return 1;
   }
 
-  SDL_Window* window = SDL_CreateWindow("hello", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 240, SDL_WINDOW_SHOWN);
-  if (window == NULL)
+  SDL_Window* window1 = SDL_CreateWindow("Mapped image", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 240, SDL_WINDOW_SHOWN);
+  //SDL_Window* window2 = SDL_CreateWindow("depth  image", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 240, SDL_WINDOW_SHOWN);
+  if (window1 == NULL )//|| window2 == NULL)
   {
 	 cout << "Error: " << SDL_GetError() << endl;
 	 return 1;
   }
 
-  SDL_Renderer* renderer = SDL_CreateRenderer(window, 1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-  if (renderer == NULL)
+  SDL_Renderer* renderer1 = SDL_CreateRenderer(window1, 1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  //SDL_Renderer* renderer2 = SDL_CreateRenderer(window2, 1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  if (renderer1 == NULL )//|| renderer2 == NULL)
   {
 	 cout << "Error: " << SDL_GetError() << endl;
 	 return 1;
@@ -151,7 +154,7 @@ int main()
 
   device.setImageRegistrationMode(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR);
 
-  cv::Mat color_img, depth_img, depth_img_show;
+  cv::Mat color_img, depth_img, depth_img_show, depth_img_bgr;
   cv::Mat color_to_depth;
 
   time_t start, end;
@@ -192,25 +195,36 @@ int main()
     		color_to_depth.size().width, color_to_depth.size().height,
             8 * color_to_depth.channels(),
             color_to_depth.step, 0xff0000, 0x00ff00, 0x0000ff, 0);
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer1, surface);
 
     SDL_FreeSurface(surface);
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, 0, 0);
-    SDL_RenderPresent(renderer);
+    SDL_RenderClear(renderer1);
+    SDL_RenderCopy(renderer1, texture, 0, 0);
+    SDL_RenderPresent(renderer1);
 
+/*
+    cvtColor(depth_img_show, depth_img_bgr, CV_GRAY2BGR);
+    surface = SDL_CreateRGBSurfaceFrom((void*)depth_img_bgr.data,
+    		depth_img_bgr.size().width, depth_img_bgr.size().height,
+                8 * depth_img_bgr.channels(),
+                depth_img_bgr.step, 0xff0000, 0x00ff00, 0x0000ff, 0);
+    texture = SDL_CreateTextureFromSurface(renderer2, surface);
+    SDL_FreeSurface(surface);
+    SDL_RenderClear(renderer2);
+    SDL_RenderCopy(renderer2, texture, 0, 0);
+    SDL_RenderPresent(renderer2);
+*/
     //cv::imshow("color to depth", color_to_depth);
     //cv::imshow("depth", depth_img_show);
     //cv::imshow("color", color_img);
 
-    /*
+
     if(!color_to_depth.empty() && !depth_img_show.empty())
     {
-       cv::cvtColor(depth_img_show, depth_img_show, cv::COLOR_GRAY2BGR);
+       cv::cvtColor(depth_img_show, depth_img_show, CV_GRAY2BGR);
        cv::Mat debug_img = color_to_depth * 0.5 + depth_img_show * 0.5;
        cv::imshow("blend", debug_img);
     }
-    */
 
     int key = 0;
     while(SDL_PollEvent(&event))
@@ -238,10 +252,21 @@ int main()
 
     if(key == 1)
     	break;
+
+    /*
+    //for openCV imgshow
+    int key = cv::waitKey(1);
+    if( key == 'q' || key == 27)
+    {
+        break;
+    }
+    */
   }
 
-  SDL_DestroyWindow(window);
-  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window1);
+  //SDL_DestroyWindow(window2);
+  SDL_DestroyRenderer(renderer1);
+  //SDL_DestroyRenderer(renderer2);
   SDL_Quit();
 
   return 0;
